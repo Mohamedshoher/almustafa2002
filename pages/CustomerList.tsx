@@ -80,218 +80,127 @@ const CustomerList: React.FC<CustomerListProps> = ({ customers, onDelete, onTogg
   };
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">إدارة العملاء</h1>
-          <p className="text-slate-500">عرض {filteredAndSortedCustomers.length} من أصل {customers.length} عميل</p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-          <div className="relative flex-1 md:w-80">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+    <div className="space-y-4">
+      <header className="flex flex-col gap-3 px-1">
+        <h1 className="text-2xl font-black text-slate-800">قائمة العملاء</h1>
+        
+        <div className="flex flex-col gap-2">
+          <div className="relative w-full">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               type="text"
               placeholder="بحث بالاسم أو الهاتف..."
-              className="w-full pr-10 pl-4 py-2.5 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm text-sm font-bold bg-white"
+              className="w-full pr-10 pl-4 py-2 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold bg-white shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all font-black text-sm ${showFilters ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'}`}
+            className={`flex items-center justify-center gap-2 py-2 px-4 rounded-xl border-2 transition-all font-black text-xs ${showFilters ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-200'}`}
           >
-            <Filter size={18} />
-            <span>تصفية النتائج</span>
+            <Filter size={16} />
+            <span>تصفية ({filteredAndSortedCustomers.length})</span>
             <ChevronDown size={14} className={`transition-transform ${showFilters ? 'rotate-180' : ''}`} />
           </button>
         </div>
       </header>
 
-      {/* شريط الفلاتر المطور لزيادة الوضوح */}
       {showFilters && (
-        <div className="bg-slate-100/80 p-5 rounded-2xl border-2 border-slate-200 shadow-inner grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="space-y-2">
-            <label className="text-[12px] font-black text-slate-600 flex items-center gap-1">
-              <AlertCircle size={14} className="text-red-500" /> الحالة
-            </label>
+        <div className="bg-white p-4 rounded-2xl border-2 border-slate-100 shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-slate-500 px-1">الحالة</label>
             <select 
               value={statusFilter} 
               onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="w-full p-2.5 border-2 border-slate-200 rounded-xl text-sm font-black bg-white text-slate-800 outline-none focus:border-indigo-500 shadow-sm"
+              className="w-full p-2 border-2 border-slate-100 rounded-lg text-xs font-black bg-slate-50"
             >
               <option value="all">الكل</option>
-              <option value="overdue">المتأخرون فقط</option>
-              <option value="has_balance">لديهم مديونية</option>
-              <option value="fully_paid">مسددون بالكامل</option>
+              <option value="overdue">المتأخرون</option>
+              <option value="has_balance">عليهم ديون</option>
+              <option value="fully_paid">مسددون</option>
             </select>
           </div>
           
-          <div className="space-y-2">
-            <label className="text-[12px] font-black text-slate-600 flex items-center gap-1">
-              <ListFilter size={14} className="text-indigo-500" /> نوع المديونية
-            </label>
-            <select 
-              value={typeFilter} 
-              onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
-              className="w-full p-2.5 border-2 border-slate-200 rounded-xl text-sm font-black bg-white text-slate-800 outline-none focus:border-indigo-500 shadow-sm"
-            >
-              <option value="all">الكل</option>
-              <option value="cash">نقدي فقط</option>
-              <option value="gold">ذهب فقط</option>
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[12px] font-black text-slate-600 flex items-center gap-1">
-              <SortAsc size={14} className="text-emerald-500" /> الترتيب حسب
-            </label>
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-slate-500 px-1">الترتيب</label>
             <select 
               value={sortBy} 
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="w-full p-2.5 border-2 border-slate-200 rounded-xl text-sm font-black bg-white text-slate-800 outline-none focus:border-indigo-500 shadow-sm"
+              className="w-full p-2 border-2 border-slate-100 rounded-lg text-xs font-black bg-slate-50"
             >
-              <option value="newest">الأحدث تسجيلاً</option>
-              <option value="oldest">الأقدم تسجيلاً</option>
-              <option value="name">الاسم (أبجدي)</option>
-              <option value="debt_desc">الأعلى مديونية</option>
+              <option value="newest">الأحدث</option>
+              <option value="oldest">الأقدم</option>
+              <option value="name">الاسم</option>
+              <option value="debt_desc">الأعلى ديوناً</option>
             </select>
-          </div>
-
-          <div className="flex items-end">
-            <button 
-              onClick={() => { setStatusFilter('all'); setTypeFilter('all'); setSortBy('newest'); setSearchTerm(''); }}
-              className="w-full py-2.5 px-4 text-sm font-black text-red-600 hover:bg-red-100 bg-white rounded-xl transition-all border-2 border-red-100 hover:border-red-300 shadow-sm"
-            >
-              إعادة تعيين الفلاتر
-            </button>
           </div>
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex border-b-2 border-slate-200">
+      {/* Tabs - أكثر ملاءمة للموبايل */}
+      <div className="flex bg-slate-200/50 p-1 rounded-xl">
         <button 
           onClick={() => setActiveTab('active')}
-          className={`px-8 py-4 font-black text-sm transition-all flex items-center gap-2 border-b-4 -mb-0.5 ${
-            activeTab === 'active' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50' : 'border-transparent text-slate-400 hover:text-slate-600'
+          className={`flex-1 py-2 text-xs font-black rounded-lg transition-all ${
+            activeTab === 'active' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
           }`}
         >
-          <UserCheck size={20} />
-          النشطون ({customers.filter(c => !c.isArchived).length})
+          نشط ({customers.filter(c => !c.isArchived).length})
         </button>
         <button 
           onClick={() => setActiveTab('archived')}
-          className={`px-8 py-4 font-black text-sm transition-all flex items-center gap-2 border-b-4 -mb-0.5 ${
-            activeTab === 'archived' ? 'border-amber-600 text-amber-700 bg-amber-50/50' : 'border-transparent text-slate-400 hover:text-slate-600'
+          className={`flex-1 py-2 text-xs font-black rounded-lg transition-all ${
+            activeTab === 'archived' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
           }`}
         >
-          <Archive size={20} />
-          الأرشيف ({customers.filter(c => !!c.isArchived).length})
+          أرشيف ({customers.filter(c => !!c.isArchived).length})
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filteredAndSortedCustomers.map(customer => {
           const { cash: totalCashRemaining, gold: totalGoldRemaining } = getTotals(customer);
           const isOverdue = hasOverdue(customer);
 
           return (
-            <div key={customer.id} className={`bg-white p-6 rounded-3xl border-2 ${isOverdue ? 'border-red-300 shadow-[0_10px_20px_rgba(239,68,68,0.1)]' : 'border-slate-100'} shadow-sm hover:shadow-xl transition-all group flex flex-col ${customer.isArchived ? 'opacity-90 grayscale-[0.2]' : ''}`}>
-              <div className="flex justify-between items-start mb-5">
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-xl font-black text-slate-800 leading-tight">{customer.name}</h3>
-                    {isOverdue && (
-                      <span className="bg-red-600 text-white px-2 py-0.5 rounded-lg text-[10px] font-black animate-pulse flex items-center gap-1 shadow-sm">
-                        <AlertCircle size={10} /> متأخر
-                      </span>
-                    )}
+            <div key={customer.id} className={`bg-white p-4 rounded-2xl border-2 ${isOverdue ? 'border-red-200' : 'border-slate-100'} flex flex-col`}>
+              <div className="flex justify-between items-start mb-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h3 className="text-base font-black text-slate-800 truncate">{customer.name}</h3>
+                    {isOverdue && <span className="bg-red-500 text-white px-1.5 py-0.5 rounded text-[8px] font-black uppercase">متأخر</span>}
                   </div>
-                  <p className="text-slate-400 font-bold text-xs flex items-center gap-1 mt-1">
-                    <Calendar size={12} /> {new Date(customer.createdAt).toLocaleDateString('ar-EG')}
-                  </p>
+                  <p className="text-[10px] text-slate-400 font-bold mt-0.5">{customer.phone}</p>
                 </div>
-                <div className="flex gap-1.5">
-                  <button 
-                    onClick={() => onToggleArchive(customer.id)}
-                    className={`p-2.5 rounded-xl transition-all border-2 ${
-                      customer.isArchived ? 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200' : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-amber-200 hover:text-amber-600'
-                    }`}
-                    title={customer.isArchived ? "استعادة" : "أرشفة"}
-                  >
-                    {customer.isArchived ? <RotateCcw size={18} /> : <Archive size={18} />}
-                  </button>
-                  <button 
-                    onClick={() => onDelete(customer.id)}
-                    className="p-2.5 bg-slate-50 text-slate-400 border-2 border-slate-100 rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
-                    title="حذف"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                  <Link 
-                    to={`/customer/${customer.id}`}
-                    className="p-2.5 bg-indigo-50 text-indigo-600 border-2 border-indigo-100 rounded-xl hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm"
-                    title="تفاصيل"
-                  >
-                    <Info size={18} />
-                  </Link>
+                <div className="flex gap-1 shrink-0">
+                  <button onClick={() => onToggleArchive(customer.id)} className="p-1.5 bg-slate-50 text-slate-400 rounded-lg border border-slate-100"><Archive size={14} /></button>
+                  <Link to={`/customer/${customer.id}`} className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100"><Info size={14} /></Link>
                 </div>
               </div>
 
-              <div className={`mb-5 p-4 rounded-2xl space-y-3 ${isOverdue ? 'bg-red-50/50 border-2 border-red-100' : 'bg-slate-50 border-2 border-slate-100'}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[11px] text-slate-500 font-black uppercase tracking-wider">
-                    <Wallet size={14} className="text-indigo-500" />
-                    متبقي نقدي
-                  </div>
-                  <span className="text-sm font-black text-indigo-800">{formatCurrency(totalCashRemaining)}</span>
+              <div className={`p-3 rounded-xl space-y-2 mb-3 ${isOverdue ? 'bg-red-50/50' : 'bg-slate-50'}`}>
+                <div className="flex items-center justify-between text-[10px] font-black">
+                  <span className="text-slate-500 uppercase">متبقي نقدي</span>
+                  <span className="text-indigo-700">{formatCurrency(totalCashRemaining)}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[11px] text-slate-500 font-black uppercase tracking-wider">
-                    <Coins size={14} className="text-amber-500" />
-                    متبقي ذهب
-                  </div>
-                  <span className="text-sm font-black text-amber-700">{formatGrams(totalGoldRemaining)}</span>
+                <div className="flex items-center justify-between text-[10px] font-black">
+                  <span className="text-slate-500 uppercase">متبقي ذهب</span>
+                  <span className="text-amber-700">{formatGrams(totalGoldRemaining)}</span>
                 </div>
               </div>
               
-              <div className="flex gap-2 pt-4 border-t-2 border-slate-50 mt-auto">
-                <a 
-                  href={`tel:${customer.phone}`}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-black text-sm shadow-md shadow-emerald-50"
-                >
-                  <Phone size={16} />
-                  <span>اتصال</span>
-                </a>
-                <a 
-                  href={`https://wa.me/${getWhatsAppNumber(customer.phone)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all font-black text-sm shadow-md shadow-green-50"
-                >
-                  <MessageSquare size={16} />
-                  <span>واتساب</span>
-                </a>
+              <div className="flex gap-2 mt-auto">
+                <a href={`tel:${customer.phone}`} className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-emerald-600 text-white rounded-lg font-black text-[10px] shadow-sm"><Phone size={12} /> اتصال</a>
+                <a href={`https://wa.me/${getWhatsAppNumber(customer.phone)}`} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-green-600 text-white rounded-lg font-black text-[10px] shadow-sm"><MessageSquare size={12} /> واتساب</a>
               </div>
             </div>
           );
         })}
+        
         {filteredAndSortedCustomers.length === 0 && (
-          <div className="col-span-full py-28 text-center bg-white rounded-[2rem] border-4 border-dashed border-slate-100 flex flex-col items-center gap-5">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center">
-              <Search size={40} className="text-slate-200" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-slate-400 font-black text-xl">لا توجد نتائج مطابقة</p>
-              <p className="text-slate-300 font-bold text-sm">حاول تغيير فلاتر البحث أو التصفية</p>
-            </div>
-            <button 
-              onClick={() => { setStatusFilter('all'); setTypeFilter('all'); setSortBy('newest'); setSearchTerm(''); }}
-              className="text-indigo-600 font-black text-sm hover:bg-indigo-50 px-6 py-2 rounded-full border-2 border-indigo-100 transition-all"
-            >
-              عرض جميع العملاء
-            </button>
+          <div className="col-span-full py-16 text-center bg-white rounded-2xl border-2 border-dashed border-slate-100">
+            <p className="text-slate-400 font-black text-sm">لا يوجد عملاء مطابقين</p>
           </div>
         )}
       </div>
