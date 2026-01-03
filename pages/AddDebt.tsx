@@ -1,13 +1,21 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Customer, DebtType, DebtImage } from '../types';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { Customer, DebtType, Debt, DebtImage } from '../types';
 import { fetchCurrentGoldPrice } from '../services/goldService';
 import { calculateInstallments, formatCurrency } from '../utils/calculations';
-import { Camera, Save, Loader2, Coins, Wallet, ExternalLink, RefreshCw, Clock, Tag } from 'lucide-react';
+import { Camera, Save, Loader2, Coins, Wallet, ExternalLink, RefreshCw, Clock, ArrowRight, User, Tag } from 'lucide-react';
 
-const AddCustomer: React.FC<{ onAdd: (customer: Customer) => void }> = ({ onAdd }) => {
+interface AddDebtProps {
+  customers: Customer[];
+  onAddDebt: (customerId: string, newDebt: Debt) => void;
+}
+
+const AddDebt: React.FC<AddDebtProps> = ({ customers, onAddDebt }) => {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const customer = customers.find(c => c.id === id);
+  
   const [loading, setLoading] = useState(false);
   const [goldPrice, setGoldPrice] = useState<number | null>(null);
   const [goldSource, setGoldSource] = useState<string | undefined>(undefined);
@@ -15,15 +23,17 @@ const AddCustomer: React.FC<{ onAdd: (customer: Customer) => void }> = ({ onAdd 
   const [isCached, setIsCached] = useState(false);
   
   // Form State
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [debtLabel, setDebtLabel] = useState('الفاتورة الأولى');
+  const [debtLabel, setDebtLabel] = useState('فاتورة جديدة');
   const [amountStr, setAmountStr] = useState<string>('');
   const [type, setType] = useState<DebtType>(DebtType.CASH);
   const [months, setMonths] = useState<number>(12);
   const [images, setImages] = useState<string[]>([]);
 
   const amount = parseFloat(amountStr) || 0;
+
+  useEffect(() => {
+    if (!customer) navigate('/customers');
+  }, [customer, navigate]);
 
   const getPrice = async (force: boolean = false) => {
     setLoading(true);
@@ -66,7 +76,7 @@ const AddCustomer: React.FC<{ onAdd: (customer: Customer) => void }> = ({ onAdd 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !phone || amount <= 0) return;
+    if (!customer || amount <= 0) return;
 
     const goldGrams = type === DebtType.GOLD && goldPrice ? amount / goldPrice : undefined;
     const now = new Date().toISOString();
@@ -77,9 +87,9 @@ const AddCustomer: React.FC<{ onAdd: (customer: Customer) => void }> = ({ onAdd 
       addedAt: now
     }));
 
-    const newDebt = {
+    const newDebt: Debt = {
       id: Math.random().toString(36).substr(2, 9),
-      label: debtLabel || 'الفاتورة الأولى',
+      label: debtLabel || 'فاتورة جديدة',
       amountInEGP: amount,
       type,
       goldPriceAtRegistration: goldPrice || undefined,
@@ -91,52 +101,30 @@ const AddCustomer: React.FC<{ onAdd: (customer: Customer) => void }> = ({ onAdd 
       images: formattedImages
     };
 
-    const newCustomer: Customer = {
-      id: Math.random().toString(36).substr(2, 9),
-      name,
-      phone,
-      createdAt: now,
-      debts: [newDebt]
-    };
-
-    onAdd(newCustomer);
-    navigate('/');
+    onAddDebt(customer.id, newDebt);
+    navigate(`/customer/${customer.id}`);
   };
+
+  if (!customer) return null;
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      <header>
-        <h1 className="text-3xl font-bold text-slate-800 text-center md:text-right">إضافة عميل جديد</h1>
-        <p className="text-slate-500 text-lg text-center md:text-right">سجل بيانات العميل والمديونية الأولى</p>
+      <header className="flex items-center gap-4">
+        <Link to={`/customer/${customer.id}`} className="p-3 bg-white rounded-full border shadow-sm text-slate-400 hover:text-indigo-600 transition-colors">
+          <ArrowRight size={24} />
+        </Link>
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">إضافة فاتورة جديدة</h1>
+          <div className="flex items-center gap-2 text-indigo-600 font-bold">
+            <User size={16} />
+            <span>للعميل: {customer.name}</span>
+          </div>
+        </div>
       </header>
 
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="block font-bold text-slate-700">اسم العميل</label>
-            <input 
-              required
-              className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-slate-900 font-bold transition-all focus:border-indigo-200"
-              placeholder="مثال: محمد أحمد"
-              value={name}
-              onChange={e => setName(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="block font-bold text-slate-700">رقم الهاتف</label>
-            <input 
-              required
-              inputMode="numeric"
-              className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-mono bg-white text-slate-900 font-bold transition-all focus:border-indigo-200"
-              placeholder="01xxxxxxxxx"
-              value={phone}
-              onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
-            />
-          </div>
-        </div>
-
-        <div className="pt-4">
-          <label className="block font-black text-slate-800 text-xl mb-4 text-center md:text-right border-r-4 border-indigo-600 pr-3">تفاصيل المديونية الأولى</label>
+        <div>
+          <label className="block font-black text-slate-800 text-xl mb-4 border-r-4 border-indigo-600 pr-3">تفاصيل المديونية الجديدة</label>
           
           <div className="space-y-2 mb-6">
             <label className="flex items-center gap-2 font-bold text-slate-700">
@@ -145,7 +133,7 @@ const AddCustomer: React.FC<{ onAdd: (customer: Customer) => void }> = ({ onAdd 
             </label>
             <input 
               className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-slate-900 font-bold transition-all"
-              placeholder="مثال: الفاتورة الأولى، طقم فرح، إلخ"
+              placeholder="مثال: فاتورة جديدة، طقم ذهب، إلخ"
               value={debtLabel}
               onChange={e => setDebtLabel(e.target.value)}
             />
@@ -182,13 +170,13 @@ const AddCustomer: React.FC<{ onAdd: (customer: Customer) => void }> = ({ onAdd 
           </div>
 
           <div className="space-y-2">
-            <label className="block font-bold text-slate-700">المبلغ الإجمالي (بالجنيه)</label>
+            <label className="block font-bold text-slate-700">المبلغ الإجمالي للفاتورة (بالجنيه)</label>
             <div className="relative">
               <input 
                 type="text"
                 inputMode="decimal"
                 required
-                className="w-full px-4 py-4 border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-3xl font-black bg-white text-indigo-900 placeholder:text-slate-200 text-center"
+                className="w-full px-4 py-4 border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-3xl font-black bg-white text-indigo-900 placeholder:text-slate-200 text-center shadow-inner"
                 placeholder="0.00"
                 value={amountStr}
                 onChange={handleAmountChange}
@@ -223,7 +211,7 @@ const AddCustomer: React.FC<{ onAdd: (customer: Customer) => void }> = ({ onAdd 
                 {loading ? (
                   <div className="flex items-center justify-center p-4 gap-3 text-amber-600 font-bold">
                     <Loader2 className="animate-spin" size={20} />
-                    <span>جاري تحديث السعر من السوق...</span>
+                    <span>جاري تحديث السعر...</span>
                   </div>
                 ) : goldPrice ? (
                   <div className="space-y-3">
@@ -252,13 +240,13 @@ const AddCustomer: React.FC<{ onAdd: (customer: Customer) => void }> = ({ onAdd 
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div className="space-y-2">
-              <label className="block font-bold text-slate-700">مدة التقسيط</label>
+              <label className="block font-bold text-slate-700">مدة التقسيط للفاتورة</label>
               <select 
                 className="w-full px-4 py-3 border-2 border-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-slate-900 font-bold appearance-none cursor-pointer"
                 value={months}
                 onChange={e => setMonths(Number(e.target.value))}
               >
-                {[3, 6, 9, 12, 18, 24, 36].map(m => (
+                {[3, 6, 9, 12, 18, 24, 36, 48].map(m => (
                   <option key={m} value={m}>{m} شهر</option>
                 ))}
               </select>
@@ -292,15 +280,15 @@ const AddCustomer: React.FC<{ onAdd: (customer: Customer) => void }> = ({ onAdd 
         </div>
 
         <button 
-          disabled={loading || (type === DebtType.GOLD && !goldPrice)}
-          className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 shadow-xl shadow-indigo-100 disabled:opacity-50 active:scale-[0.98] mt-4"
+          disabled={loading || (type === DebtType.GOLD && !goldPrice) || amount <= 0}
+          className="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 shadow-xl shadow-emerald-100 disabled:opacity-50 active:scale-[0.98] mt-4"
         >
           {loading ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
-          حفظ البيانات والبدء
+          حفظ الفاتورة الجديدة
         </button>
       </form>
     </div>
   );
 };
 
-export default AddCustomer;
+export default AddDebt;

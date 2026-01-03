@@ -24,8 +24,15 @@ export interface Installment {
   paymentDate?: string;
 }
 
+export interface DebtImage {
+  id: string;
+  url: string; // Base64
+  addedAt: string; // ISO string
+}
+
 export interface Debt {
   id: string;
+  label: string; // اسم الفاتورة (مثلاً: الفاتورة الأولى، طقم ذهب، إلخ)
   amountInEGP: number;
   type: DebtType;
   goldPriceAtRegistration?: number;
@@ -34,7 +41,7 @@ export interface Debt {
   startDate: string;
   installments: Installment[];
   history: PaymentRecord[]; // سجل كل عملية دفع أو زيادة تمت
-  images: string[]; // Base64 strings
+  images: DebtImage[]; 
 }
 
 export interface Customer {

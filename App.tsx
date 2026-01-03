@@ -5,8 +5,9 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import CustomerList from './pages/CustomerList';
 import AddCustomer from './pages/AddCustomer';
+import AddDebt from './pages/AddDebt';
 import CustomerDetail from './pages/CustomerDetail';
-import { Customer } from './types';
+import { Customer, Debt } from './types';
 import { loadCustomers, saveCustomers } from './services/storageService';
 
 const App: React.FC = () => {
@@ -26,6 +27,14 @@ const App: React.FC = () => {
 
   const handleUpdateCustomer = (id: string, updated: Customer) => {
     setCustomers(prev => prev.map(c => c.id === id ? updated : c));
+  };
+
+  const handleAddDebtToCustomer = (customerId: string, newDebt: Debt) => {
+    setCustomers(prev => prev.map(c => 
+      c.id === customerId 
+        ? { ...c, debts: [...c.debts, newDebt] } 
+        : c
+    ));
   };
 
   const handleDeleteCustomer = (id: string) => {
@@ -56,6 +65,15 @@ const App: React.FC = () => {
             } 
           />
           <Route path="/add-customer" element={<AddCustomer onAdd={handleAddCustomer} />} />
+          <Route 
+            path="/customer/:id/add-debt" 
+            element={
+              <AddDebt 
+                customers={customers} 
+                onAddDebt={handleAddDebtToCustomer} 
+              />
+            } 
+          />
           <Route 
             path="/customer/:id" 
             element={
