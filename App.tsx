@@ -8,67 +8,46 @@ import AddCustomer from './pages/AddCustomer';
 import AddDebt from './pages/AddDebt';
 import CustomerDetail from './pages/CustomerDetail';
 import { Customer, Debt } from './types';
-import { subscribeToCustomers, syncCustomerToCloud, deleteCustomerFromCloud } from './services/storageService';
-import { Loader2 } from 'lucide-react';
+import { loadCustomers, saveCustomers } from './services/storageService';
 
 const App: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // جلب البيانات من التخزين المحلي
-    const unsubscribe = subscribeToCustomers(
-      (data) => {
-        setCustomers(data);
-        setLoading(false);
-      },
-      (err) => {
-        console.error("Storage Error:", err);
-        setLoading(false);
-      }
-    );
-    
-    return () => unsubscribe();
+    setCustomers(loadCustomers());
   }, []);
 
-  const handleAddCustomer = async (customer: Customer) => {
-    await syncCustomerToCloud(customer);
+  useEffect(() => {
+    saveCustomers(customers);
+  }, [customers]);
+
+  const handleAddCustomer = (customer: Customer) => {
+    setCustomers(prev => [...prev, customer]);
   };
 
-  const handleUpdateCustomer = async (id: string, updated: Customer) => {
-    await syncCustomerToCloud(updated);
+  const handleUpdateCustomer = (id: string, updated: Customer) => {
+    setCustomers(prev => prev.map(c => c.id === id ? updated : c));
   };
 
-  const handleAddDebtToCustomer = async (customerId: string, newDebt: Debt) => {
-    const customer = customers.find(c => c.id === customerId);
-    if (customer) {
-      const updated = { ...customer, debts: [...customer.debts, newDebt] };
-      await syncCustomerToCloud(updated);
+  const handleAddDebtToCustomer = (customerId: string, newDebt: Debt) => {
+    setCustomers(prev => prev.map(c => 
+      c.id === customerId 
+        ? { ...c, debts: [...c.debts, newDebt] } 
+        : c
+    ));
+  };
+
+  const handleDeleteCustomer = (id: string) => {
+    if (window.confirm('هل أنت متأكد من حذف هذا العميل نهائياً؟ لا يمكن التراجع عن هذه الخطوة.')) {
+      setCustomers(prev => prev.filter(c => c.id !== id));
     }
   };
 
-  const handleDeleteCustomer = async (id: string) => {
-    if (window.confirm('هل أنت متأكد من حذف هذا العميل نهائياً؟')) {
-      await deleteCustomerFromCloud(id);
-    }
+  const handleToggleArchive = (id: string) => {
+    setCustomers(prev => prev.map(c => 
+      c.id === id ? { ...c, isArchived: !c.isArchived } : c
+    ));
   };
-
-  const handleToggleArchive = async (id: string) => {
-    const customer = customers.find(c => c.id === id);
-    if (customer) {
-      const updated = { ...customer, isArchived: !customer.isArchived };
-      await syncCustomerToCloud(updated);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
-        <Loader2 className="animate-spin text-indigo-600" size={48} />
-        <p className="font-black text-slate-600">جاري تحميل البيانات...</p>
-      </div>
-    );
-  }
 
   return (
     <Router>
