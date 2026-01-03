@@ -8,46 +8,61 @@ import AddCustomer from './pages/AddCustomer';
 import AddDebt from './pages/AddDebt';
 import CustomerDetail from './pages/CustomerDetail';
 import { Customer, Debt } from './types';
-import { loadCustomers, saveCustomers } from './services/storageService';
+import { subscribeToCustomers, syncCustomerToCloud, deleteCustomerFromCloud } from './services/storageService';
+import { Loader2 } from 'lucide-react';
 
 const App: React.FC = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setCustomers(loadCustomers());
+    // الاشتراك في التغييرات السحابية
+    const unsubscribe = subscribeToCustomers((data) => {
+      setCustomers(data);
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    saveCustomers(customers);
-  }, [customers]);
-
-  const handleAddCustomer = (customer: Customer) => {
-    setCustomers(prev => [...prev, customer]);
+  const handleAddCustomer = async (customer: Customer) => {
+    await syncCustomerToCloud(customer);
   };
 
-  const handleUpdateCustomer = (id: string, updated: Customer) => {
-    setCustomers(prev => prev.map(c => c.id === id ? updated : c));
+  const handleUpdateCustomer = async (id: string, updated: Customer) => {
+    await syncCustomerToCloud(updated);
   };
 
-  const handleAddDebtToCustomer = (customerId: string, newDebt: Debt) => {
-    setCustomers(prev => prev.map(c => 
-      c.id === customerId 
-        ? { ...c, debts: [...c.debts, newDebt] } 
-        : c
-    ));
-  };
-
-  const handleDeleteCustomer = (id: string) => {
-    if (window.confirm('هل أنت متأكد من حذف هذا العميل نهائياً؟ لا يمكن التراجع عن هذه الخطوة.')) {
-      setCustomers(prev => prev.filter(c => c.id !== id));
+  const handleAddDebtToCustomer = async (customerId: string, newDebt: Debt) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (customer) {
+      const updated = { ...customer, debts: [...customer.debts, newDebt] };
+      await syncCustomerToCloud(updated);
     }
   };
 
-  const handleToggleArchive = (id: string) => {
-    setCustomers(prev => prev.map(c => 
-      c.id === id ? { ...c, isArchived: !c.isArchived } : c
-    ));
+  const handleDeleteCustomer = async (id: string) => {
+    const customer = customers.find(c => c.id === id);
+    if (customer && window.confirm('هل أنت متأكد من حذف هذا العميل نهائياً؟ سيتم حذف بياناته من السحابة وصوره من هذا الجهاز.')) {
+      await deleteCustomerFromCloud(id, customer.debts);
+    }
   };
+
+  const handleToggleArchive = async (id: string) => {
+    const customer = customers.find(c => c.id === id);
+    if (customer) {
+      const updated = { ...customer, isArchived: !customer.isArchived };
+      await syncCustomerToCloud(updated);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
+        <Loader2 className="animate-spin text-indigo-600" size={48} />
+        <p className="font-black text-slate-600 animate-pulse">جاري الاتصال بقاعدة البيانات...</p>
+      </div>
+    );
+  }
 
   return (
     <Router>
