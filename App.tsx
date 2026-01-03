@@ -16,11 +16,18 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // الاشتراك في التغييرات السحابية
-    const unsubscribe = subscribeToCustomers((data) => {
-      setCustomers(data);
-      setLoading(false);
-    });
+    // جلب البيانات من التخزين المحلي
+    const unsubscribe = subscribeToCustomers(
+      (data) => {
+        setCustomers(data);
+        setLoading(false);
+      },
+      (err) => {
+        console.error("Storage Error:", err);
+        setLoading(false);
+      }
+    );
+    
     return () => unsubscribe();
   }, []);
 
@@ -41,9 +48,8 @@ const App: React.FC = () => {
   };
 
   const handleDeleteCustomer = async (id: string) => {
-    const customer = customers.find(c => c.id === id);
-    if (customer && window.confirm('هل أنت متأكد من حذف هذا العميل نهائياً؟ سيتم حذف بياناته من السحابة وصوره من هذا الجهاز.')) {
-      await deleteCustomerFromCloud(id, customer.debts);
+    if (window.confirm('هل أنت متأكد من حذف هذا العميل نهائياً؟')) {
+      await deleteCustomerFromCloud(id);
     }
   };
 
@@ -59,7 +65,7 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
         <Loader2 className="animate-spin text-indigo-600" size={48} />
-        <p className="font-black text-slate-600 animate-pulse">جاري الاتصال بقاعدة البيانات...</p>
+        <p className="font-black text-slate-600">جاري تحميل البيانات...</p>
       </div>
     );
   }
